@@ -31,8 +31,7 @@ def video_feed():
 
 
 class MoveDetector:
-    def __init__(self, API_Key):
-        self.API_Key = API_Key
+    def __init__(self):
         self.detectmove()
 
     def frameDiff(self, t0, t1, t2):
@@ -42,10 +41,7 @@ class MoveDetector:
 
         return cv2.bitwise_and(dI1, dI2)
     def detectmove(self):
-        #capture = cv2.VideoCapture(0)
-        capture = cv2.VideoCapture("http://192.168.1.193:5001/")
-
-        a = capture.isOpened()
+        capture = cv2.VideoCapture(0)
 
         winName = "Motion Detector"
         cv2.namedWindow(winName, cv2.CV_WINDOW_AUTOSIZE)
@@ -106,20 +102,20 @@ class MoveDetector:
 
 
 
-class Notification:
-    def __init__(self,title, message):
-        self.title = title
-        self.message = message
-        self.API_Key = 'key=AIzaSyDHdW5TlcGBwReOe5WhRBoH3aDzRlVmbNU'
-        self.url = 'https://fcm.googleapis.com/fcm/send'
-        self.push_notofication()
-
-    def push_notofication(self):
-        header = {"Content-Type": "application/json",
-                "Authorization": self.API_Key}
-        json = {"notification": {"body" : self.message,
-               "title" : self.title},"to":"/topics/movementDetection",}
-        requests.post('https://fcm.googleapis.com/fcm/send', json=json, headers=header)
+# class Notification:
+#     def __init__(self,title, message):
+#         self.title = title
+#         self.message = message
+#         self.API_Key = 'key=AIzaSyDHdW5TlcGBwReOe5WhRBoH3aDzRlVmbNU'
+#         self.url = 'https://fcm.googleapis.com/fcm/send'
+#         self.push_notofication()
+#
+#     def push_notofication(self):
+#         header = {"Content-Type": "application/json",
+#                 "Authorization": self.API_Key}
+#         json = {"notification": {"body" : self.message,
+#                "title" : self.title},"to":"/topics/movementDetection",}
+#         requests.post('https://fcm.googleapis.com/fcm/send', json=json, headers=header)
 
 
 
@@ -129,4 +125,4 @@ class Notification:
 if __name__ == '__main__':
     print cv2.__version__
     #app.run(host='127.0.0.1', debug=True)
-    MoveDetector(1)
+    MoveDetector()
