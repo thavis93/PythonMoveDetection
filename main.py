@@ -2,6 +2,9 @@ import requests
 from flask import Flask, render_template, Response
 import cv2
 import datetime
+import time
+from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+import HttpHandler
 
 from flask import Flask, redirect
 from pyfcm import FCMNotification
@@ -26,7 +29,7 @@ def gen(Camera):
 
 @app.route('/video_feed')
 def video_feed():
-    return Response(gen(MoveDetector(1)),
+    return Response(gen(MoveDetector()),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
@@ -42,6 +45,8 @@ class MoveDetector:
         return cv2.bitwise_and(dI1, dI2)
     def detectmove(self):
         capture = cv2.VideoCapture(0)
+        capture.set(3, 640)
+        capture.set(4, 480)
 
         winName = "Motion Detector"
         cv2.namedWindow(winName, cv2.CV_WINDOW_AUTOSIZE)
@@ -76,7 +81,7 @@ class MoveDetector:
                 if cv2.contourArea(contour) < 200:
                     continue
 
-                if cv2.contourArea(contour) > 200 and time_delta > 15:
+                if cv2.contourArea(contour) > 200 and time_delta > 5:
                     (x, y, w, h) = cv2.boundingRect(contour)
                     cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
                     print "wykryto ruch"
@@ -93,10 +98,12 @@ class MoveDetector:
             cv2.imshow( winName, frame )
             ret, jpeg = cv2.imencode('.jpeg', frame)
 
+
+
             if cv2.waitKey(1) & 0xFF == ord('q'):
                  break
 
-            #return jpeg.tobytes()
+            return jpeg.tobytes()
         capture.release()
         cv2.destroyWindow(winName)
 
@@ -125,4 +132,12 @@ class MoveDetector:
 if __name__ == '__main__':
     print cv2.__version__
     #app.run(host='127.0.0.1', debug=True)
-    MoveDetector()
+    app.run(host='192.168.1.165', debug=True)
+    #MoveDetector()
+    try:
+        server = HTTPServer(('127.0.0.1', 5000), HttpHandler.VideoHandler(MoveDetector()))
+        print 'server started'
+        server.serve_forever()
+    except KeyboardInterrupt:
+        server.socket.close()
+
