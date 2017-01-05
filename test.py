@@ -1,5 +1,6 @@
 import cv2
-
+import HttpHandler
+from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 class VideoCamera(object):
     def __init__(self):
@@ -7,6 +8,8 @@ class VideoCamera(object):
         # from a webcam, comment the line below out and use a video file
         # instead.
         self.video = cv2.VideoCapture(0)
+        self.video.set(3, 640)
+        self.video.set(4, 480)
         # If you decide to use video.mp4, you must have this file in the folder
         # as the main.py.
         # self.video = cv2.VideoCapture('video.mp4')
@@ -33,13 +36,21 @@ def index():
 def gen(camera):
     while True:
         frame = camera.get_frame()
+        print "frame"
         yield (b'--frame\r\n'
+               b'Content-Length: ' + str(len(frame)) + b'\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
 
-@app.route('/video_feed')
+@app.route('/video')
 def video_feed():
     return Response(gen(VideoCamera()),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
-    app.run(host='192.168.1.165', debug=True)
+    app.run(host='192.168.1.165', threaded=True, debug=False)
+    try:
+        server = HTTPServer(('192.168.1.165', 5000), HttpHandler.VideoHandler(VideoCamera()))
+        print 'server started'
+        server.serve_forever()
+    except KeyboardInterrupt:
+        server.socket.close()
